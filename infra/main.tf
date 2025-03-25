@@ -1,16 +1,30 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 4.0.0"
+    }
+  }
+}
+
 provider "aws" {
   region = var.aws_region
 }
 
-# Use the official AWS VPC module from the Terraform Registry.
+# Retrieve available AZs for the region.
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 3.0"  # Adjust to the latest version as needed
+  version = "~> 4.0.0"
 
   name = "my-vpc"
   cidr = "10.0.0.0/16"
 
-  azs             = ["${var.aws_region}a", "${var.aws_region}b"]
+  # Use the first two available AZs using the slice function.
+  azs = slice(data.aws_availability_zones.available.names, 0, 2)
   public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
   private_subnets = ["10.0.101.0/24", "10.0.102.0/24"]
 
@@ -54,6 +68,7 @@ resource "aws_instance" "bastion" {
   subnet_id              = module.vpc.public_subnets[0]
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]
   key_name               = var.key_pair_name
+  associate_public_ip_address = true
 
   tags = {
     Name = "Bastion-Host"
@@ -61,7 +76,6 @@ resource "aws_instance" "bastion" {
 }
 
 # Security Group for private instances.
-# (Here we allow SSH from the bastion host's security group, if you need to connect via the bastion.)
 resource "aws_security_group" "private_sg" {
   name        = "private-sg"
   description = "Security group for private EC2 instances"
@@ -89,7 +103,6 @@ resource "aws_instance" "private_instances" {
   count                  = 6
   ami                    = var.custom_ami
   instance_type          = var.private_instance_type
-  # Distribute instances across the available private subnets
   subnet_id              = element(module.vpc.private_subnets, count.index % length(module.vpc.private_subnets))
   vpc_security_group_ids = [aws_security_group.private_sg.id]
   key_name               = var.key_pair_name

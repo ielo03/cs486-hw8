@@ -77,3 +77,15 @@ Update terraform variables
 - Update any default values to your liking
 
 ### 7
+
+Bring up the Terraform infrastructure
+
+- `cd infra` and run `terraform init` to download the necessary
+  providers and modules.
+- Run `terraform plan` to see what Terraform will create.
+- Run `terraform apply` to create the AWS resources.
+
+### 8
+
+Run `terraform destroy` to see what resources will be destroyed,
+and confirm the destruction by typing `yes`.
