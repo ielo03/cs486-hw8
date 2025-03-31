@@ -25,8 +25,13 @@ variable "bastion_instance_type" {
   default     = "t2.micro"
 }
 
-variable "custom_ami" {
-  description = "Custom AMI ID created by Packer for the private instances"
+variable "amazonlinux_ami" {
+  description = "Custom AMI ID created by Packer for the private instances on amazon linux"
+  type        = string
+}
+
+variable "ubuntu_ami" {
+  description = "Custom AMI ID created by Packer for the private instances on ubuntu"
   type        = string
 }
 

@@ -46,10 +46,12 @@ Run packer init
 
 ### 5
 
-Run packer build
+Build both AMIs
 
-- Within the cs486-hw8 directory run the command `packer build -var-file=vars.pkrvars.hcl docker-amazonlinux.pkr.hcl`
-- Record the ami
+- Within the cs486-hw8/packer directory run the command `packer build -var-file=vars.pkrvars.hcl docker-amazonlinux.pkr.hcl`
+- Record the ami for the amazon linux machines
+- Within the cs486-hw8/packer directory run the command `packer build -var-file=vars.pkrvars.hcl docker-ubuntu.pkr.hcl`
+- Record the ami for the ubuntu machines
 
 Successful output:
 
@@ -86,6 +88,25 @@ Bring up the Terraform infrastructure
 - Run `terraform apply` to create the AWS resources.
 
 ### 8
+
+Set up Ansible
+
+- Connect to the ansible controller with `ssh -A -i {YOUR_KEY_NAME}.pem -o "ProxyCommand=ssh -A -i {YOUR_KEY_NAME}.pem -W %h:%p ec2-user@{BASTION_PUBLIC_IP}"ec2-user@{ANSIBLE_PRIVATE_IP}`
+- Install Ansible with `sudo amazon-linux-extras install ansible2 -y`
+- `cd ansible` and run `./inventory-helper.sh` to dynamically generate the ansible inventory file
+- Update the ansible/ansible.cfg file to have the proper key pair name
+- Copy your key pair pem file to /home/ec2-user/{key_pair_name}.pem
+- Run `chmod 400 /home/ec2-user/{key_pair_name}.pem`
+- Run `mkdir ansible` then copy ansible/ansible.cfg, ansible/update_systems.yml, and ansible/inventory.ini into the ansible dir on the ansible ec2
+- From /ansible test the connections with `ansible all -m ping`
+
+### 9
+
+Run Ansible
+
+- From /ansible run `ansible-playbook update_system.yml`
+
+### 10
 
 Run `terraform destroy` to see what resources will be destroyed,
 and confirm the destruction by typing `yes`.

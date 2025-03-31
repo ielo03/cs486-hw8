@@ -24,11 +24,11 @@ inventory_file="inventory.ini"
 
 # Start with fresh file and add Ubuntu group
 echo "[ubuntu]" > "$inventory_file"
-echo "$instances_json" | jq -r '.[][] | select(.Name | test("^Ubuntu-EC2-")) | "\(.Name) ubuntu=\(.PrivateIp)"' | sort >> "$inventory_file"
+echo "$instances_json" | jq -r '.[][] | select(.Name | test("^Ubuntu-EC2-")) | "\(.Name) ansible_host=\(.PrivateIp) ansible_user=ubuntu"' | sort >> "$inventory_file"
 
 # Add a blank line and then the Amazon Linux group
 echo "" >> "$inventory_file"
 echo "[amazonlinux]" >> "$inventory_file"
-echo "$instances_json" | jq -r '.[][] | select(.Name | test("^AmazonLinux-EC2-")) | "\(.Name) ec2-user=\(.PrivateIp)"' | sort >> "$inventory_file"
+echo "$instances_json" | jq -r '.[][] | select(.Name | test("^AmazonLinux-EC2-")) | "\(.Name) ansible_host=\(.PrivateIp) ansible_user=ec2-user"' | sort >> "$inventory_file"
 
 echo "Inventory file created: $inventory_file"

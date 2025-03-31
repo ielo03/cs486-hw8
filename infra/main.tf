@@ -97,38 +97,6 @@ resource "aws_security_group" "private_sg" {
     security_groups  = [aws_security_group.bastion_sg.id]
   }
 
-  ingress {
-    description      = "Docker Swarm cluster management"
-    from_port        = 2377
-    to_port          = 2377
-    protocol         = "tcp"
-    security_groups  = [aws_security_group.bastion_sg.id]
-  }
-
-  ingress {
-    description      = "Docker Swarm node communication"
-    from_port        = 7946
-    to_port          = 7946
-    protocol         = "tcp"
-    security_groups  = [aws_security_group.bastion_sg.id]
-  }
-
-  ingress {
-    description      = "Docker Swarm node communication (UDP)"
-    from_port        = 7946
-    to_port          = 7946
-    protocol         = "udp"
-    security_groups  = [aws_security_group.bastion_sg.id]
-  }
-
-  ingress {
-    description      = "Docker Swarm overlay network"
-    from_port        = 4789
-    to_port          = 4789
-    protocol         = "udp"
-    security_groups  = [aws_security_group.bastion_sg.id]
-  }
-
   egress {
     description = "Allow all outbound traffic"
     from_port   = 0
@@ -138,16 +106,48 @@ resource "aws_security_group" "private_sg" {
   }
 }
 
-# 6 EC2 Instances in the private subnet using your custom AMI.
-resource "aws_instance" "private_instances" {
-  count                  = 6
-  ami                    = var.custom_ami
+# 3 Ubuntu EC2 Instances in the private subnet
+resource "aws_instance" "ubuntu_instances" {
+  count                  = 3
+  ami                    = var.ubuntu_ami
   instance_type          = var.private_instance_type
   subnet_id              = element(module.vpc.private_subnets, count.index % length(module.vpc.private_subnets))
   vpc_security_group_ids = [aws_security_group.private_sg.id]
   key_name               = var.key_pair_name
 
   tags = {
-    Name = "Private-EC2-${count.index + 1}"
+    Name = "Ubuntu-EC2-${count.index + 1}"
+    OS   = "ubuntu"
+  }
+}
+
+# 3 Amazon Linux EC2 Instances in the private subnet
+resource "aws_instance" "amazonlinux_instances" {
+  count                  = 3
+  ami                    = var.amazonlinux_ami
+  instance_type          = var.private_instance_type
+  subnet_id              = element(module.vpc.private_subnets, count.index % length(module.vpc.private_subnets))
+  vpc_security_group_ids = [aws_security_group.private_sg.id]
+  key_name               = var.key_pair_name
+
+  tags = {
+    Name = "AmazonLinux-EC2-${count.index + 1}"
+    OS   = "amazon"
+  }
+}
+
+# Ansible Controller in the public subnet
+resource "aws_instance" "ansible_controller" {
+  ami                    = var.amazonlinux_ami
+  instance_type          = var.bastion_instance_type
+  subnet_id              = module.vpc.private_subnets[1]
+  vpc_security_group_ids = [aws_security_group.private_sg.id]
+  key_name               = var.key_pair_name
+  associate_public_ip_address = false
+
+  tags = {
+    Name = "Ansible-Controller"
+    Role = "ansible"
+    OS = "amazon"
   }
 }
