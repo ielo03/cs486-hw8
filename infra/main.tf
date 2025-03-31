@@ -82,10 +82,50 @@ resource "aws_security_group" "private_sg" {
   vpc_id      = module.vpc.vpc_id
 
   ingress {
+    description     = "Allow intra-security group traffic"
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    self            = true
+  }
+
+  ingress {
     description      = "Allow SSH from Bastion Host"
     from_port        = 22
     to_port          = 22
     protocol         = "tcp"
+    security_groups  = [aws_security_group.bastion_sg.id]
+  }
+
+  ingress {
+    description      = "Docker Swarm cluster management"
+    from_port        = 2377
+    to_port          = 2377
+    protocol         = "tcp"
+    security_groups  = [aws_security_group.bastion_sg.id]
+  }
+
+  ingress {
+    description      = "Docker Swarm node communication"
+    from_port        = 7946
+    to_port          = 7946
+    protocol         = "tcp"
+    security_groups  = [aws_security_group.bastion_sg.id]
+  }
+
+  ingress {
+    description      = "Docker Swarm node communication (UDP)"
+    from_port        = 7946
+    to_port          = 7946
+    protocol         = "udp"
+    security_groups  = [aws_security_group.bastion_sg.id]
+  }
+
+  ingress {
+    description      = "Docker Swarm overlay network"
+    from_port        = 4789
+    to_port          = 4789
+    protocol         = "udp"
     security_groups  = [aws_security_group.bastion_sg.id]
   }
 
